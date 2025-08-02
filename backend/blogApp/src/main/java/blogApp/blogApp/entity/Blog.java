@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.xml.stream.events.Comment;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -31,9 +33,16 @@ public class Blog {
 
     private String userId; // This will link the blog to a specific user
 
+    private int views = 0;
+    private List<String> viewedByUsers = new ArrayList<>();
+
+    private int likes = 0;
+    private List<String> likedByUsers = new ArrayList<>();
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
 
     // Custom constructor for creating new blog posts
     public Blog(String title, String content, String category, List<String> tags, String image, String userId) {

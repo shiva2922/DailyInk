@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import javax.xml.stream.events.Comment;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,6 +22,10 @@ public class BlogResponse {
     private List<String> tags;
     private String image;
     private String userId;
+    private int likes;
+    private int views;
+    private List<Comment> comments;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -33,7 +38,13 @@ public class BlogResponse {
         this.tags = blog.getTags();
         this.image = blog.getImage();
         this.userId = blog.getUserId();
+        this.likes = blog.getLikes();
+        this.views = blog.getViews();
         this.createdAt = blog.getCreatedAt();
         this.updatedAt = blog.getUpdatedAt();
+        this.comments = blog.getComments();
+
     }
+
+
 }

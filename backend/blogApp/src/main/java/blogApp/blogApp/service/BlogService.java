@@ -2,11 +2,14 @@ package blogApp.blogApp.service;
 
 
 
+import blogApp.blogApp.dto.BlogResponse;
+import blogApp.blogApp.dto.CreateBlogRequest;
 import blogApp.blogApp.entity.Blog;
 import blogApp.blogApp.repository.BlogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.xml.stream.events.Comment;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -18,10 +21,22 @@ public class BlogService {
     private final BlogRepository blogRepository;
 
     // Create a new blog post
-    public Blog createBlog(String title, String content, String category, List<String> tags, String image, String userId) {
-        Blog blog = new Blog(title, content, category, tags, image, userId);
-        return blogRepository.save(blog);
+    public BlogResponse createBlog(CreateBlogRequest request, String userId) {
+        Blog blog = new Blog();
+        blog.setTitle(request.getTitle());
+        blog.setContent(request.getContent());
+        blog.setCategory(request.getCategory());
+        blog.setTags(request.getTags());
+        blog.setImage(request.getImage());
+        blog.setCreatedAt(LocalDateTime.now());
+        blog.setUpdatedAt(LocalDateTime.now());
+        blog.setUserId(userId); // <- Link the user to blog
+
+        Blog saved=blogRepository.save(blog);
+
+        return new BlogResponse(saved);
     }
+
 
     // Get all blogs (for home page)
     public List<Blog> getAllBlogs() {
@@ -32,6 +47,26 @@ public class BlogService {
     public Optional<Blog> getBlogById(String id) {
         return blogRepository.findById(id);
     }
+    //---
+    public Optional<Blog> getBlogByIdAndUpdateViews(String blogId, String currentUserId) {
+        Optional<Blog> blogOpt = blogRepository.findById(blogId);
+        if (blogOpt.isPresent()) {
+            Blog blog = blogOpt.get();
+
+            // Check if user has already viewed
+            if (!blog.getViewedByUsers().contains(currentUserId)) {
+                blog.getViewedByUsers().add(currentUserId);
+                blog.setViews(blog.getViews() + 1);
+                blogRepository.save(blog);
+            }
+
+            return Optional.of(blog);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    //--
 
     // Get all blogs by a specific user
     public List<Blog> getBlogsByUserId(String userId) {
@@ -77,4 +112,54 @@ public class BlogService {
         }
         return false;
     }
+
+    //---like
+    public Optional<Blog> toggleLike(String blogId, String userId) {
+        Optional<Blog> blogOpt = blogRepository.findById(blogId);
+        if (blogOpt.isPresent()) {
+            Blog blog = blogOpt.get();
+
+            if (blog.getLikedByUsers().contains(userId)) {
+                // Already liked → remove like
+                blog.getLikedByUsers().remove(userId);
+                blog.setLikes(blog.getLikes() - 1);
+
+            } else {
+                // Not liked → add like
+                blog.getLikedByUsers().add(userId);
+                blog.setLikes(blog.getLikes() + 1);
+
+            }
+
+            blog.setUpdatedAt(LocalDateTime.now());
+            blogRepository.save(blog);
+            return Optional.of(blog);
+
+        }
+        return Optional.empty();
+    }
+
+    //-------comment
+    public Optional<Blog> addComment(String blogId, String userId, String commentText) {
+        Optional<Blog> blogOpt = blogRepository.findById(blogId);
+        if (blogOpt.isPresent()) {
+            Blog blog = blogOpt.get();
+
+            Comment comment = new Comment();
+            comment.setCommentText(commentText);
+            comment.setCommentedBy(userId);
+            comment.setCommentedAt(LocalDateTime.now());
+
+            blog.getComments().add(comment);
+            blog.setUpdatedAt(LocalDateTime.now());
+
+            blogRepository.save(blog);
+            return Optional.of(blog);
+        }
+        return Optional.empty();
+    }
+
+
+
+
 }
